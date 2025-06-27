@@ -1,0 +1,3 @@
+[submodule "carlaBridge"]
+	path = carlaBridge
+	url = ssh://github.com/pasta-auto/carlaBridge
