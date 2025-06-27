@@ -1,0 +1,18 @@
+diff --git a/src/llh_converter.cpp b/src/llh_converter.cpp
+index d9e15d5..e892847 100644
+--- a/src/llh_converter.cpp
++++ b/src/llh_converter.cpp
+@@ -558,6 +558,13 @@ void LLHConverter::setPlaneNum(int plane_num)
+     lon_deg = 154;
+     lon_min = 0;
+   }
++  else if (plane_num == 20)
++  {
++    lat_deg = 0;
++    lat_min = 0;
++    lon_deg = 0;
++    lon_min = 0;
++  }
+ 
+   // swap longitude and latitude
+   plane_lat_rad_ = M_PI * ((double)lat_deg + (double)lat_min / 60.0) / 180.0;

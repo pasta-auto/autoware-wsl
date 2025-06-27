@@ -1,0 +1,52 @@
+diff --git a/planning/behavior_path_planner/include/behavior_path_planner/scene_module/goal_planner/goal_planner_module.hpp b/planning/behavior_path_planner/include/behavior_path_planner/scene_module/goal_planner/goal_planner_module.hpp
+index abad4b9f29..3a9644e3ef 100644
+--- a/planning/behavior_path_planner/include/behavior_path_planner/scene_module/goal_planner/goal_planner_module.hpp
++++ b/planning/behavior_path_planner/include/behavior_path_planner/scene_module/goal_planner/goal_planner_module.hpp
+@@ -194,7 +194,7 @@ private:
+     std::deque<nav_msgs::msg::Odometry::ConstSharedPtr> & odometry_buffer, const double time);
+   bool hasFinishedCurrentPath();
+   bool hasFinishedGoalPlanner();
+-  bool isOnGoal() const;
++  bool isOnModifiedGoal() const;
+   double calcModuleRequestLength() const;
+   void resetStatus();
+   bool needPathUpdate(const double path_update_duration) const;
+diff --git a/planning/behavior_path_planner/src/scene_module/goal_planner/goal_planner_module.cpp b/planning/behavior_path_planner/src/scene_module/goal_planner/goal_planner_module.cpp
+index 6915b2be16..3cb4fd690b 100644
+--- a/planning/behavior_path_planner/src/scene_module/goal_planner/goal_planner_module.cpp
++++ b/planning/behavior_path_planner/src/scene_module/goal_planner/goal_planner_module.cpp
+@@ -1083,17 +1083,20 @@ bool GoalPlannerModule::hasFinishedCurrentPath()
+   return is_near_target && isStopped();
+ }
+ 
+-bool GoalPlannerModule::isOnGoal() const
++bool GoalPlannerModule::isOnModifiedGoal() const
+ {
++  if (!modified_goal_pose_) {
++    return false;
++  }
++
+   const Pose current_pose = planner_data_->self_odometry->pose.pose;
+-  const Pose goal_pose = modified_goal_pose_ ? modified_goal_pose_->goal_pose
+-                                             : planner_data_->route_handler->getGoalPose();
+-  return calcDistance2d(current_pose, goal_pose) < parameters_->th_arrived_distance;
++  return calcDistance2d(current_pose, modified_goal_pose_->goal_pose) <
++         parameters_->th_arrived_distance;
+ }
+ 
+ bool GoalPlannerModule::hasFinishedGoalPlanner()
+ {
+-  return isOnGoal() && isStopped();
++  return isOnModifiedGoal() && isStopped();
+ }
+ 
+ TurnSignalInfo GoalPlannerModule::calcTurnSignalInfo() const
+@@ -1514,7 +1517,7 @@ bool GoalPlannerModule::checkOriginalGoalIsInShoulder() const
+ 
+ bool GoalPlannerModule::needPathUpdate(const double path_update_duration) const
+ {
+-  return !isOnGoal() && hasEnoughTimePassedSincePathUpdate(path_update_duration);
++  return !isOnModifiedGoal() && hasEnoughTimePassedSincePathUpdate(path_update_duration);
+ }
+ 
+ bool GoalPlannerModule::hasEnoughTimePassedSincePathUpdate(const double duration) const

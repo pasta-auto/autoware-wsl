@@ -1,0 +1,36 @@
+diff --git a/control/mpc_lateral_controller/src/qp_solver/qp_solver_osqp.cpp b/control/mpc_lateral_controller/src/qp_solver/qp_solver_osqp.cpp
+index dba803e8f5..7c76d67e75 100644
+--- a/control/mpc_lateral_controller/src/qp_solver/qp_solver_osqp.cpp
++++ b/control/mpc_lateral_controller/src/qp_solver/qp_solver_osqp.cpp
+@@ -72,12 +72,10 @@ bool QPSolverOSQP::solve(
+ 
+   // polish status: successful (1), unperformed (0), (-1) unsuccessful
+   int status_polish = std::get<2>(result);
+-  if (status_polish == -1) {
+-    RCLCPP_WARN(logger_, "osqp status_polish = %d (unsuccessful)", status_polish);
+-    return false;
+-  }
+-  if (status_polish == 0) {
+-    RCLCPP_WARN(logger_, "osqp status_polish = %d (unperformed)", status_polish);
++  if (status_polish == -1 || status_polish == 0) {
++    const auto s = (status_polish == 0) ? "Polish process is not performed in osqp."
++                                        : "Polish process failed in osqp.";
++    RCLCPP_INFO(logger_, "%s The required accuracy is met, but the solution can be inaccurate.", s);
+     return true;
+   }
+   return true;
+diff --git a/control/mpc_lateral_controller/test/test_mpc.cpp b/control/mpc_lateral_controller/test/test_mpc.cpp
+index 6066cd3419..6f8a6fb598 100644
+--- a/control/mpc_lateral_controller/test/test_mpc.cpp
++++ b/control/mpc_lateral_controller/test/test_mpc.cpp
+@@ -252,9 +252,8 @@ TEST_F(MPCTest, OsqpCalculate)
+   AckermannLateralCommand ctrl_cmd;
+   Trajectory pred_traj;
+   Float32MultiArrayStamped diag;
+-  // with OSQP this function returns false despite finding correct solutions
+   const auto odom = makeOdometry(pose_zero, default_velocity);
+-  EXPECT_FALSE(mpc.calculateMPC(neutral_steer, odom, ctrl_cmd, pred_traj, diag));
++  EXPECT_TRUE(mpc.calculateMPC(neutral_steer, odom, ctrl_cmd, pred_traj, diag));
+   EXPECT_EQ(ctrl_cmd.steering_tire_angle, 0.0f);
+   EXPECT_EQ(ctrl_cmd.steering_tire_rotation_rate, 0.0f);
+ }

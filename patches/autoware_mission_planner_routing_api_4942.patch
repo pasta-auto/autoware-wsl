@@ -1,0 +1,48 @@
+diff --git a/planning/mission_planner/src/mission_planner/mission_planner.cpp b/planning/mission_planner/src/mission_planner/mission_planner.cpp
+index 0c9b27a685..f7e0e061f9 100644
+--- a/planning/mission_planner/src/mission_planner/mission_planner.cpp
++++ b/planning/mission_planner/src/mission_planner/mission_planner.cpp
+@@ -112,7 +112,29 @@ MissionPlanner::MissionPlanner(const rclcpp::NodeOptions & options)
+   adaptor.init_srv(srv_clear_mrm_route_, this, &MissionPlanner::on_clear_mrm_route);
+   adaptor.init_sub(sub_modified_goal_, this, &MissionPlanner::on_modified_goal);
+ 
++  // Route state will be published when the node gets ready for route api after initialization,
++  // otherwise the mission planner rejects the request for the API.
++  data_check_timer_ = create_wall_timer(
++    std::chrono::milliseconds(100), std::bind(&MissionPlanner::checkInitialization, this));
++}
++
++void MissionPlanner::checkInitialization()
++{
++  if (!planner_->ready()) {
++    RCLCPP_INFO_THROTTLE(
++      get_logger(), *get_clock(), 5000, "waiting lanelet map... Route API is not ready.");
++    return;
++  }
++  if (!odometry_) {
++    RCLCPP_INFO_THROTTLE(
++      get_logger(), *get_clock(), 5000, "waiting odometry... Route API is not ready.");
++    return;
++  }
++
++  // All data is ready. Now API is available.
++  RCLCPP_INFO(get_logger(), "Route API is ready.");
+   change_state(RouteState::Message::UNSET);
++  data_check_timer_->cancel();  // stop timer callback
+ }
+ 
+ void MissionPlanner::on_odometry(const Odometry::ConstSharedPtr msg)
+diff --git a/planning/mission_planner/src/mission_planner/mission_planner.hpp b/planning/mission_planner/src/mission_planner/mission_planner.hpp
+index 4d09f72f81..52f4fa7c5d 100644
+--- a/planning/mission_planner/src/mission_planner/mission_planner.hpp
++++ b/planning/mission_planner/src/mission_planner/mission_planner.hpp
+@@ -75,6 +75,9 @@ private:
+   Odometry::ConstSharedPtr odometry_;
+   void on_odometry(const Odometry::ConstSharedPtr msg);
+ 
++  rclcpp::TimerBase::SharedPtr data_check_timer_;
++  void checkInitialization();
++
+   rclcpp::Publisher<MarkerArray>::SharedPtr pub_marker_;
+   void clear_route();
+   void clear_mrm_route();

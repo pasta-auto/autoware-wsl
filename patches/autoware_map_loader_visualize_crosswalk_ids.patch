@@ -1,0 +1,14 @@
+diff --git a/map/map_loader/src/lanelet2_map_loader/lanelet2_map_visualization_node.cpp b/map/map_loader/src/lanelet2_map_loader/lanelet2_map_visualization_node.cpp
+index df845ca9bd..87eb9d95f0 100644
+--- a/map/map_loader/src/lanelet2_map_loader/lanelet2_map_visualization_node.cpp
++++ b/map/map_loader/src/lanelet2_map_loader/lanelet2_map_visualization_node.cpp
+@@ -213,6 +213,9 @@ void Lanelet2MapVisualizationNode::onMapBin(
+   insertMarkerArray(
+     &map_marker_array,
+     lanelet::visualization::generateLaneletIdMarker(shoulder_lanelets, cl_lanelet_id));
++  insertMarkerArray(
++    &map_marker_array,
++    lanelet::visualization::generateLaneletIdMarker(crosswalk_lanelets, cl_lanelet_id));
+   insertMarkerArray(
+     &map_marker_array,
+     lanelet::visualization::generateLaneletIdMarker(road_lanelets, cl_lanelet_id));

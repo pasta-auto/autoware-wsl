@@ -1,0 +1,15 @@
+- name: Install Proj
+  become: true
+  ansible.builtin.apt:
+    name: libproj22
+    state: latest
+    update_cache: true
+
+- name: Install Proj Devel
+  become: true
+  ansible.builtin.apt:
+    name: libproj-dev
+    state: latest
+    update_cache: true
+  when: install_devel | bool
+
